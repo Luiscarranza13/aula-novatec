@@ -54,10 +54,12 @@ export const AnnouncementsPage = () => {
   const handleEdit = (a) => { setEditing(a); reset(a); setShowModal(true); };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await anuncioService.eliminar(confirmId);
+      await anuncioService.eliminar(id);
       toast.success('Anuncio eliminado');
-      setConfirmId(null); loadData();
+      loadData();
     } catch { toast.error('Error al eliminar'); }
   };
 

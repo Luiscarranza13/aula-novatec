@@ -44,10 +44,12 @@ export const EnrollmentsPage = () => {
   };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await inscripcionService.eliminar(confirmId);
+      await inscripcionService.eliminar(id);
       Swal.fire({ icon: 'success', title: 'Inscripción eliminada', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      setConfirmId(null); reload({ page, search: search || undefined });
+      reload({ page, search: search || undefined });
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
     }

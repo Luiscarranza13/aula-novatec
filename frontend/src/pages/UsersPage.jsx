@@ -65,10 +65,11 @@ export const UsersPage = () => {
   };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await usuarioService.eliminar(confirmId);
+      await usuarioService.eliminar(id);
       Swal.fire({ icon: 'success', title: 'Usuario eliminado', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      setConfirmId(null);
       reload({ page, search: search || undefined });
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });

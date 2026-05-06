@@ -90,10 +90,12 @@ export const GradesPage = () => {
   };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await calificacionService.eliminar(confirmId);
+      await calificacionService.eliminar(id);
       Swal.fire({ icon: 'success', title: 'Calificación eliminada', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      setConfirmId(null); loadData();
+      loadData();
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
     }

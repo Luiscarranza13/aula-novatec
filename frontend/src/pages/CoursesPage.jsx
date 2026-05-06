@@ -68,10 +68,12 @@ export const CoursesPage = () => {
   const handleEdit = (course) => { setEditingCourse(course); reset(course); setShowModal(true); };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await cursoService.eliminar(confirmId);
+      await cursoService.eliminar(id);
       Swal.fire({ icon: 'success', title: 'Curso eliminado', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      setConfirmId(null); loadData();
+      loadData();
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
     }

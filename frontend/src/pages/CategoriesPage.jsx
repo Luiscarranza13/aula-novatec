@@ -41,10 +41,12 @@ export const CategoriesPage = () => {
   };
 
   const handleDelete = async () => {
+    const id = confirmId;
+    setConfirmId(null);
     try {
-      await categoriaService.eliminar(confirmId);
+      await categoriaService.eliminar(id);
       toast.success('Categoría eliminada');
-      setConfirmId(null); loadData();
+      loadData();
     } catch { toast.error('Error al eliminar'); }
   };
 

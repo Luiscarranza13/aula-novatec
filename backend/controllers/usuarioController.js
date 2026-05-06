@@ -69,8 +69,7 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
-    // Soft delete — Mejora #14
-    await db.execute('UPDATE usuarios SET deleted_at = NOW(), activo = 0 WHERE id=?', [req.params.id]);
+    await db.execute('DELETE FROM usuarios WHERE id=?', [req.params.id]);
     res.json({ success: true, message: 'Usuario eliminado' });
   } catch (err) { next(err); }
 };

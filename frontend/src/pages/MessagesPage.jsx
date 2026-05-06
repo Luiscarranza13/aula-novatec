@@ -45,8 +45,14 @@ export const MessagesPage = () => {
   };
 
   const handleDelete = async () => {
-    await mensajeService.eliminar(confirmId);
-    setConfirmId(null); setSelected(null); loadData();
+    const id = confirmId;
+    setConfirmId(null);
+    setSelected(null);
+    try {
+      await mensajeService.eliminar(id);
+      toast.success('Mensaje eliminado');
+      loadData();
+    } catch { toast.error('Error al eliminar'); }
   };
 
   const lista = tab === 'recibidos' ? bandeja.recibidos : bandeja.enviados;

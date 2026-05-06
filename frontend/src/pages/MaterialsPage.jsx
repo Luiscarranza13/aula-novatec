@@ -49,10 +49,13 @@ export const MaterialsPage = () => {
   };
 
   const handleDelete = async () => {
-    await materialService.eliminar(confirmId);
-    toast.success('Material eliminado');
+    const id = confirmId;
     setConfirmId(null);
-    if (cursoId) materialService.getByCurso(cursoId).then(r => setMateriales(r.data || []));
+    try {
+      await materialService.eliminar(id);
+      toast.success('Material eliminado');
+      if (cursoId) materialService.getByCurso(cursoId).then(r => setMateriales(r.data || []));
+    } catch { toast.error('Error al eliminar'); }
   };
 
   return (

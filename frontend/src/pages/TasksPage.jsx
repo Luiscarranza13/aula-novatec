@@ -59,8 +59,15 @@ export const TasksPage = () => {
   };
 
   const handleDelete = async () => {
-    await tareaService.eliminar(confirmId);
-    setConfirmId(null); loadTareas(cursoFiltro);
+    const id = confirmId;
+    setConfirmId(null);
+    try {
+      await tareaService.eliminar(id);
+      Swal.fire({ icon: 'success', title: 'Tarea eliminada', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      loadTareas(cursoFiltro);
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Error al eliminar', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+    }
   };
 
   const vencida = (fecha) => fecha && new Date(fecha) < new Date();
