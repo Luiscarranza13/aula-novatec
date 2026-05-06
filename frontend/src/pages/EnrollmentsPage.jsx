@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import { gsap } from 'gsap';
@@ -12,7 +12,6 @@ import { Badge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Pagination } from '../components/ui/Pagination';
 import { formatDate } from '../lib/utils';
-import { useEffect } from 'react';
 
 export const EnrollmentsPage = () => {
   const [page, setPage] = useState(1);

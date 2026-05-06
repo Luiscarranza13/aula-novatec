@@ -49,6 +49,14 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const { nota, comentario } = req.body;
+    // Guardar historial antes de actualizar — Mejora #28
+    const [[existing]] = await db.execute('SELECT nota, usuario_id, curso_id FROM calificaciones WHERE id=?', [req.params.id]);
+    if (existing) {
+      await db.execute(
+        'INSERT INTO calificaciones_historial (calificacion_id, usuario_id, curso_id, nota_anterior, nota_nueva, modificado_por) VALUES (?,?,?,?,?,?)',
+        [req.params.id, existing.usuario_id, existing.curso_id, existing.nota, nota, req.user?.userId || null]
+      ).catch(() => {}); // No fallar si la tabla no existe aún
+    }
     await db.execute('UPDATE calificaciones SET nota=?, comentario=? WHERE id=?', [nota, comentario || null, req.params.id]);
     res.json({ success: true, message: 'Calificación actualizada' });
   } catch (err) { next(err); }

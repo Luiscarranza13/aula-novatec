@@ -1,0 +1,134 @@
+import React, { useEffect, useState } from 'react';
+import { MessageSquare, Send, Trash2, Mail, MailOpen } from 'lucide-react';
+import { mensajeService, usuarioService } from '../../services/api';
+import { useAuthStore } from '../../store/useAuthStore';
+import Swal from 'sweetalert2';
+
+const ACCENT = '#d97706';
+
+export const TeacherMessagesPage = () => {
+  const { user } = useAuthStore();
+  const [mensajes, setMensajes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ para_usuario_id: '', asunto: '', contenido: '' });
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    loadMensajes();
+    usuarioService.obtenerTodos({ limit: 100 }).then(r => {
+      setUsuarios((r.data || []).filter(u => u.id !== user?.id));
+    }).catch(() => {});
+  }, []);
+
+  const loadMensajes = async () => {
+    try {
+      const r = await mensajeService.getBandeja();
+      const all = [...(r.recibidos || []), ...(r.enviados || [])];
+      setMensajes(all);
+    } catch { } finally { setLoading(false); }
+  };
+
+  const handleSend = async () => {
+    if (!form.para_usuario_id || !form.contenido.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Completa destinatario y mensaje', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      return;
+    }
+    try {
+      await mensajeService.enviar(form);
+      Swal.fire({ icon: 'success', title: 'Mensaje enviado', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+      setShowForm(false); setForm({ para_usuario_id: '', asunto: '', contenido: '' }); loadMensajes();
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Error', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+    }
+  };
+
+  const handleOpen = async (msg) => {
+    setSelected(msg);
+    if (!msg.leido && msg.para_usuario_id === user?.id) {
+      await mensajeService.marcarLeido(msg.id).catch(() => {});
+      loadMensajes();
+    }
+  };
+
+  const recibidos = mensajes.filter(m => m.para_usuario_id === user?.id);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: 0 }}>Mensajes</h1>
+          <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{recibidos.filter(m => !m.leido).length} sin leer</p>
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: ACCENT, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <Send size={14} /> Nuevo mensaje
+        </button>
+      </div>
+
+      {showForm && (
+        <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #fde68a', padding: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 14px' }}>Nuevo Mensaje</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <select value={form.para_usuario_id} onChange={e => setForm({ ...form, para_usuario_id: e.target.value })}
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #fde68a', fontSize: 13, outline: 'none' }}>
+              <option value="">Seleccionar destinatario...</option>
+              {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre} ({u.rol})</option>)}
+            </select>
+            <input value={form.asunto} onChange={e => setForm({ ...form, asunto: e.target.value })} placeholder="Asunto (opcional)"
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #fde68a', fontSize: 13, outline: 'none' }} />
+            <textarea value={form.contenido} onChange={e => setForm({ ...form, contenido: e.target.value })} placeholder="Escribe tu mensaje..." rows={4}
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #fde68a', fontSize: 13, outline: 'none', resize: 'none' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleSend}
+                style={{ flex: 1, padding: '9px 0', background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Enviar
+              </button>
+              <button onClick={() => setShowForm(false)}
+                style={{ padding: '9px 16px', background: '#f1f5f9', color: '#374151', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1fr' : '1fr', gap: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #fde68a', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #fef3c7', background: '#fffbeb' }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: '#78350f', margin: 0 }}>📥 Recibidos ({recibidos.length})</p>
+          </div>
+          {loading ? <p style={{ padding: 20, color: '#9ca3af', fontSize: 13 }}>Cargando...</p> :
+            recibidos.length === 0 ? <p style={{ padding: 20, color: '#9ca3af', fontSize: 13, textAlign: 'center' }}>Sin mensajes</p> :
+              recibidos.map(m => (
+                <div key={m.id} onClick={() => handleOpen(m)}
+                  style={{ padding: '12px 18px', borderBottom: '1px solid #fef3c7', cursor: 'pointer', background: selected?.id === m.id ? '#fffbeb' : !m.leido ? '#fffef5' : '#fff', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  {m.leido ? <MailOpen size={15} color="#9ca3af" style={{ marginTop: 2, flexShrink: 0 }} /> : <Mail size={15} color={ACCENT} style={{ marginTop: 2, flexShrink: 0 }} />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: m.leido ? 400 : 700, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.de_nombre}</p>
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.asunto || 'Sin asunto'}</p>
+                  </div>
+                </div>
+              ))
+          }
+        </div>
+
+        {selected && (
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #fde68a', padding: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>{selected.asunto || 'Sin asunto'}</p>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>De: {selected.de_nombre} · {new Date(selected.created_at).toLocaleString('es-ES')}</p>
+              </div>
+              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', fontSize: 16, cursor: 'pointer', color: '#9ca3af' }}>✕</button>
+            </div>
+            <div style={{ background: '#fffbeb', borderRadius: 10, padding: 16, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+              {selected.contenido}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

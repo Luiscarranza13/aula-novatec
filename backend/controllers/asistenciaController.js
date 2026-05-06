@@ -21,9 +21,18 @@ exports.getByCurso = async (req, res, next) => {
 
 exports.registrar = async (req, res, next) => {
   try {
-    const { registros } = req.body; // [{ usuario_id, curso_id, fecha, presente, observacion }]
+    // Acepta tanto un objeto individual como un array de registros
+    let registros = req.body.registros;
+    if (!registros) {
+      // Objeto individual: { usuario_id, curso_id, fecha, presente, observacion }
+      const { usuario_id, curso_id, fecha, presente, observacion } = req.body;
+      if (!usuario_id || !curso_id || !fecha)
+        return res.status(400).json({ success: false, message: 'usuario_id, curso_id y fecha son requeridos' });
+      registros = [{ usuario_id, curso_id, fecha, presente, observacion }];
+    }
+
     if (!Array.isArray(registros) || !registros.length)
-      return res.status(400).json({ success: false, message: 'Se requiere un array de registros' });
+      return res.status(400).json({ success: false, message: 'Se requiere un array de registros o un objeto individual' });
 
     for (const r of registros) {
       await db.execute(

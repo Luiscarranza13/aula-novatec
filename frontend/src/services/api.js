@@ -125,4 +125,35 @@ export const buscadorService = {
   buscar: (q) => body(api.get('/buscar', { params: { q } })),
 };
 
+// ── Nuevos servicios — Mejoras #21, #22, #29, #76 ────────────
+
+export const dashboardService = {
+  stats: () => body(api.get('/dashboard/stats')),
+};
+
+export const progresoService = {
+  alumno: (id) => body(api.get(`/progreso/alumnos/${id}/estadisticas`)),
+  curso: (id) => body(api.get(`/progreso/cursos/${id}/progreso`)),
+};
+
+export const configuracionService = {
+  get: () => body(api.get('/configuracion')),
+  update: (data) => body(api.put('/configuracion', data)),
+  updateKey: (clave, valor) => body(api.put(`/configuracion/${clave}`, { valor })),
+};
+
+export const healthService = {
+  check: () => body(api.get('/health')),
+};
+
+// ── Upload con progreso — Mejora #44 ─────────────────────────
+export const uploadWithProgress = (url, formData, onProgress) =>
+  body(api.post(url, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (e) => {
+      const pct = Math.round((e.loaded * 100) / e.total);
+      onProgress?.(pct);
+    },
+  }));
+
 export default api;

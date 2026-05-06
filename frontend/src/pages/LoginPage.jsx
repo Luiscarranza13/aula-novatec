@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { GraduationCap, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { GraduationCap, Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { gsap } from 'gsap';
 import { useAuthStore } from '../store/useAuthStore';
 import { authService } from '../services/api';
@@ -25,7 +25,10 @@ export const LoginPage = () => {
       const response = await authService.login(data);
       login(response.user, response.token);
       Swal.fire({ icon: 'success', title: `¡Bienvenido, ${response.user.nombre}!`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      navigate('/app');
+      const rol = response.user.rol;
+      if (rol === 'admin') navigate('/app');
+      else if (rol === 'profesor') navigate('/portal/profesor');
+      else navigate('/portal/alumno');
     } catch (error) {
       Swal.fire({ icon:"error", title:"Error", text:error.response?.data?.message || 'Credenciales incorrectas', toast:true, position:"top-end", showConfirmButton:false, timer:4000 });
     } finally {
@@ -38,6 +41,15 @@ export const LoginPage = () => {
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 flex-col items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-700 to-violet-700" />
+
+        {/* Botón volver al inicio — esquina superior izquierda */}
+        <Link to="/"
+          className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium transition-colors"
+          style={{ textDecoration: 'none' }}>
+          <ArrowLeft size={16} />
+          Volver al inicio
+        </Link>
+
         <div className="relative z-10 text-center text-white">
           <div className="w-20 h-20 rounded-full mx-auto mb-6 shadow-xl login-logo" style={{ background:'#fff', border:'3px solid rgba(255,255,255,0.4)', display:'flex', alignItems:'center', justifyContent:'center', padding:'6px' }}>
             <img src="/logo.png" alt="Aula Virtual" className="w-full h-full object-contain" />
@@ -60,6 +72,17 @@ export const LoginPage = () => {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md login-card">
+
+          {/* Botón volver — visible en móvil */}
+          <div className="lg:hidden mb-4">
+            <Link to="/"
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors"
+              style={{ textDecoration: 'none' }}>
+              <ArrowLeft size={15} />
+              Volver al inicio
+            </Link>
+          </div>
+
           <div className="lg:hidden text-center mb-8">
             <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <GraduationCap className="text-white" size={28} />

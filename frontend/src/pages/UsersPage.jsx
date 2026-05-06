@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
-import { gsap } from 'gsap';
-import { Plus, Users, Search, Edit, Trash2, Mail, GraduationCap } from 'lucide-react';
+import { Plus, Users, Search, Edit, Trash2, Mail, GraduationCap, Download, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useUsuarios } from '../hooks/useUsuarios';
 import { usuarioService } from '../services/api';
 import { Button } from '../components/ui/Button';
@@ -12,6 +11,8 @@ import { Badge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Pagination } from '../components/ui/Pagination';
 import { formatDate } from '../lib/utils';
+import { useExportCSV } from '../hooks/useExportCSV';
+import api from '../services/api';
 
 export const UsersPage = () => {
   const [page, setPage] = useState(1);
@@ -22,8 +23,25 @@ export const UsersPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { exportToCSV } = useExportCSV();
 
   const filtered = filterRol ? usuarios.filter(u => u.rol === filterRol) : usuarios;
+
+  // Mejora #74 — Toggle activo/inactivo
+  const handleToggleActivo = async (user) => {
+    try {
+      await api.patch(`/usuarios/${user.id}/toggle`);
+      Swal.fire({ icon: 'success', title: user.activo ? 'Usuario desactivado' : 'Usuario activado', toast: true, position: 'top-end', showConfirmButton: false, timer: 2500 });
+      reload();
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e.response?.data?.message || 'Error', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+    }
+  };
+
+  // Mejora #39 — Exportar CSV
+  const handleExportCSV = () => {
+    exportToCSV(filtered, 'usuarios', ['id', 'nombre', 'email', 'rol', 'activo', 'created_at']);
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -66,6 +84,9 @@ export const UsersPage = () => {
         </div>
         <Button onClick={() => { reset(); setEditingUser(null); setShowModal(true); }}>
           <Plus size={16} className="mr-2" /> Nuevo Usuario
+        </Button>
+        <Button variant="outline" onClick={handleExportCSV} title="Exportar CSV">
+          <Download size={16} className="mr-2" /> CSV
         </Button>
       </div>
 
@@ -136,13 +157,25 @@ export const UsersPage = () => {
                       </div>
                     </td>
                     <td className="table-cell">
-                      {user.rol === 'profesor'
-                        ? <Badge variant="purple" dot>Profesor</Badge>
-                        : <Badge variant="blue" dot>Estudiante</Badge>}
+                      <div className="flex flex-col gap-1">
+                        {user.rol === 'profesor'
+                          ? <Badge variant="purple" dot>Profesor</Badge>
+                          : user.rol === 'admin'
+                          ? <Badge variant="orange" dot>Admin</Badge>
+                          : <Badge variant="blue" dot>Estudiante</Badge>}
+                        {!user.activo && <Badge variant="red">Inactivo</Badge>}
+                      </div>
                     </td>
                     <td className="table-cell text-slate-500 text-xs">{formatDate(user.created_at)}</td>
                     <td className="table-cell">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 items-center">
+                        <button onClick={() => handleToggleActivo(user)}
+                          title={user.activo ? 'Desactivar usuario' : 'Activar usuario'}
+                          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                          {user.activo
+                            ? <ToggleRight size={16} className="text-green-500" />
+                            : <ToggleLeft size={16} className="text-slate-400" />}
+                        </button>
                         <button onClick={() => handleEdit(user)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
                           <Edit size={14} className="text-slate-500" />
                         </button>

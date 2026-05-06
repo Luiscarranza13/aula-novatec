@@ -52,15 +52,36 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const { nombre, email, rol } = req.body;
-    await db.execute('UPDATE usuarios SET nombre=?, email=?, rol=? WHERE id=?', [nombre, email, rol, req.params.id]);
+    const { nombre, email, rol, activo } = req.body;
+    const fields = [];
+    const values = [];
+    if (nombre !== undefined) { fields.push('nombre=?'); values.push(nombre); }
+    if (email  !== undefined) { fields.push('email=?');  values.push(email); }
+    if (rol    !== undefined) { fields.push('rol=?');    values.push(rol); }
+    if (activo !== undefined) { fields.push('activo=?'); values.push(activo); }
+    if (!fields.length)
+      return res.status(400).json({ success: false, message: 'Nada que actualizar' });
+    values.push(req.params.id);
+    await db.execute(`UPDATE usuarios SET ${fields.join(', ')} WHERE id=?`, values);
     res.json({ success: true, message: 'Usuario actualizado' });
   } catch (err) { next(err); }
 };
 
 exports.remove = async (req, res, next) => {
   try {
-    await db.execute('DELETE FROM usuarios WHERE id=?', [req.params.id]);
+    // Soft delete — Mejora #14
+    await db.execute('UPDATE usuarios SET deleted_at = NOW(), activo = 0 WHERE id=?', [req.params.id]);
     res.json({ success: true, message: 'Usuario eliminado' });
+  } catch (err) { next(err); }
+};
+
+// Mejora #74 — Activar/desactivar usuario
+exports.toggleActivo = async (req, res, next) => {
+  try {
+    const [rows] = await db.execute('SELECT activo FROM usuarios WHERE id=?', [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    const nuevoEstado = rows[0].activo ? 0 : 1;
+    await db.execute('UPDATE usuarios SET activo=? WHERE id=?', [nuevoEstado, req.params.id]);
+    res.json({ success: true, message: nuevoEstado ? 'Usuario activado' : 'Usuario desactivado', activo: nuevoEstado });
   } catch (err) { next(err); }
 };

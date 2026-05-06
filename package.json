@@ -1,13 +1,17 @@
 {
   "name": "aula-virtual",
-  "version": "1.0.0",
+  "version": "5.0.0",
   "private": true,
+  "description": "Aula Virtual — Sistema de gestión educativa",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
-    "seed": "cd backend && node scripts/seed.js"
+    "seed": "cd backend && node scripts/seed.js",
+    "reset:users": "cd backend && node scripts/resetUsers.js",
+    "backup": "cd backend && node scripts/backup.js",
+    "test": "cd backend && node scripts/testAllModules.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
