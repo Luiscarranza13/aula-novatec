@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎓 Aula Virtual
 
 Sistema web completo para gestión de usuarios, cursos, inscripciones, calificaciones y anuncios.
@@ -137,3 +138,7 @@ aula-virtual/
 | admin@aula.com | 123456 | admin |
 | maria@aula.com | 123456 | profesor |
 | ana@aula.com | 123456 | estudiante |
+=======
+# aula-novatec
+proyecto colaborativo
+>>>>>>> f89e2a6be8e20ce93d2edc70d28601469f1568fd
